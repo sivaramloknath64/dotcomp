@@ -1,0 +1,103 @@
+﻿@using SmartStore.Core.Domain.Forums;
+@using SmartStore.Web;
+@using SmartStore.Web.Models.Boards;
+@model EditForumPostModel
+@{
+    var cancelUrl = Url.RouteUrl("TopicSlug", new { id = Model.ForumTopicId, slug = Model.ForumTopicSeName });
+    if (Model.Id != 0)
+    {
+        cancelUrl = string.Concat(cancelUrl, "#", Model.Id);
+    }
+}
+@using (Html.BeginForm())
+{
+    <div class="page post-edit">
+        <div class="page-title">
+            <h2>@(Model.IsEdit ? T("Forum.EditPost") : T("Forum.NewPost"))</h2>
+        </div>
+
+        <div class="message-error">
+            @Html.ValidationSummary(true)
+        </div>
+
+        @Html.HiddenFor(model => model.Id)
+        @Html.HiddenFor(model => model.ForumTopicId)
+
+        <div class="form-group row pt-3">
+            <label class="col-sm-3">@T("Forum.ForumName")</label>
+            <div class="col-sm-9" dir="auto">@Model.ForumName</div>
+        </div>
+
+        <div class="form-group row">
+            <label class="col-sm-3">@T("Forum.TopicSubject")</label>
+            <div class="col-sm-9" dir="auto">@Model.ForumTopicSubject</div>
+        </div>
+
+        <div class="row justify-content-end">
+            <div class="col-sm-9 my-3" dir="auto">
+                @if (Model.ForumEditor == EditorType.BBCodeEditor)
+                {
+                    @Html.BBCodeEditor("Text");
+                }
+                @Html.TextAreaFor(model => model.Text, new { @class = "form-control forum-post-text", TextMode = "MultiLine" })
+                @Html.ValidationMessageFor(model => model.Text)
+            </div>
+        </div>
+
+        @if (Model.IsModerator && !Model.IsFirstPost)
+        {
+            <div class="row justify-content-end">
+                <div class="col-sm-9">
+					<div class="form-check">
+                        @Html.CheckBoxFor(model => model.Published, new { @class = "form-check-input" })
+			            <label class="form-check-label" for="@Html.IdFor(model => model.Published)">
+				            @T("Common.Published")
+			            </label>
+					</div>
+                </div>
+            </div>
+        }
+
+        @if (Model.IsCustomerAllowedToSubscribe)
+        {
+            <div class="row justify-content-end">
+                <div class="col-sm-9">
+					<div class="form-check">
+						@Html.CheckBoxFor(model => model.Subscribed, new { @class = "form-check-input" })
+						<label class="form-check-label" for="Subscribed">@T("Forum.NotifyWhenSomeonePostsInThisTopic")</label>
+					</div>
+                </div>
+            </div>
+        }
+
+		<div class="row justify-content-end">
+			<div class="col-sm-9">
+				@{ Html.RenderWidget("gdpr_consent"); }
+			</div>
+		</div>
+
+		@if (Model.DisplayCaptcha)
+		{
+			<div class="row justify-content-end mt-3">
+                <div class="col-sm-9">
+				    <div class="captcha-box">
+					    @Html.Raw(Html.GenerateCaptcha())
+				    </div>
+                </div>
+			</div>
+		}
+
+        <div class="row justify-content-end">
+            <div class="col-sm-9 mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa fa-reply"></i>
+                    <span>@T("Forum.Submit")</span>
+                </button>
+                <a class="btn btn-secondary" href="@cancelUrl">
+                    <i class="fa fa-times"></i>
+                    <span>@T("Forum.Cancel")</span>
+                </a>
+            </div>
+        </div>
+    </div>
+}

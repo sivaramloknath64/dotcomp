@@ -1,0 +1,45 @@
+﻿@model SmartStore.DevTools.Models.ConfigurationModel
+@using SmartStore.Web.Framework;
+
+<div class="plugin-actions">
+	<button id="SaveConfigButton" type="submit" name="save" class="btn btn-warning" value="save">
+		<i class="fa fa-check"></i>
+		<span>@T("Admin.Common.Save")</span>
+	</button>
+</div>
+
+@{ Html.RenderAction("StoreScopeConfiguration", "Setting", new { area = "Admin" }); }
+@Html.ValidationSummary(false)
+
+@using (Html.BeginForm())
+{
+	<table class="adminContent">
+        <tr>
+            <td class="adminTitle">
+                @Html.SmartLabelFor(model => model.EnableMiniProfilerInPublicStore)
+            </td>
+            <td class="adminData">
+                @Html.SettingEditorFor(model => model.EnableMiniProfilerInPublicStore)
+                @Html.ValidationMessageFor(model => model.EnableMiniProfilerInPublicStore)
+            </td>
+        </tr>
+        <tr>
+            <td class="adminTitle">
+                @Html.SmartLabelFor(model => model.DisplayWidgetZones)
+            </td>
+            <td class="adminData">
+                @Html.SettingEditorFor(model => model.DisplayWidgetZones)
+                @Html.ValidationMessageFor(model => model.DisplayWidgetZones)
+            </td>
+        </tr>
+		<tr>
+			<td class="adminTitle">
+				@Html.SmartLabelFor(model => model.DisplayMachineName)
+			</td>
+			<td class="adminData">
+				@Html.SettingEditorFor(model => model.DisplayMachineName)
+				@Html.ValidationMessageFor(model => model.DisplayMachineName)
+			</td>
+		</tr>
+    </table>
+}

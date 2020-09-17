@@ -1,0 +1,188 @@
+﻿@model ShipmentModel
+@{    
+    ViewBag.Title = T("Admin.Orders.Shipments.ViewDetails").Text;
+}
+@using (Html.BeginForm())
+{
+    @Html.HiddenFor(model => model.Id)
+    @Html.HiddenFor(model => model.OrderId)
+
+    <div class="section-header">
+        <div class="title">
+            @T("Admin.Orders.Shipments.ViewDetails") - @Model.Id @Html.ActionLink("(" + T("Admin.Orders.Shipments.BackToOrder") + ")", "Edit", new { id = Model.OrderId })
+        </div>
+        <div class="options">
+            @if (Model.DisplayPdfPackagingSlip)
+            {
+                <a href="@Url.Action("PdfPackagingSlips", new { all = false, selectedIds = Model.Id.ToString(), area = "Admin" })" class="btn btn-secondary">
+					<i class="fa fa-print"></i>
+					<span>@T("Admin.Orders.Shipments.PrintPackagingSlip")</span>
+				</a>
+            }
+            <button type="submit" name="save" value="save" class="btn btn-warning">
+				<i class="fa fa-check"></i>
+				<span>@T("Admin.Common.Save")</span>
+			</button>
+            <button type="submit" name="save" value="save-continue" class="btn btn-secondary">
+				<span>@T("Admin.Common.SaveContinue")</span>
+			</button>
+            <button type="submit" id="shipment-delete" class="btn btn-danger">
+				<i class="far fa-trash-alt"></i>
+				<span>@T("Admin.Common.Delete")</span>
+			</button>
+        </div>
+    </div>
+	
+    @Html.ValidationSummary(false)
+
+    <table class="adminContent">
+        <tr>
+            <td class="adminTitle">
+                @Html.SmartLabelFor(model => model.TrackingNumber)
+            </td>
+            <td class="adminData">
+				@Html.EditorFor(model => model.TrackingNumber)
+                @Html.ValidationMessageFor(model => model.TrackingNumber)
+            </td>
+        </tr>
+        <tr>
+            <td class="adminTitle">
+                @Html.SmartLabelFor(model => model.TrackingUrl)
+            </td>
+            <td class="adminData">
+				<div class="input-group">
+					@Html.EditorFor(model => model.TrackingUrl)
+					<span class="input-group-append">
+                        <a id="btn-tracking-url" href="@Model.TrackingUrl" target="_blank" class="btn btn-secondary" title="@T("Common.OpenUrl")">
+                            <i class="fa fa-link"></i>
+                        </a>
+					</span>
+				</div>
+                @Html.ValidationMessageFor(model => model.TrackingUrl)
+            </td>
+        </tr>
+        <tr>
+            <td class="adminTitle">
+                @Html.SmartLabelFor(model => model.TotalWeight)
+            </td>
+            <td class="adminData">
+				<div class="form-control-plaintext">
+					@Model.TotalWeight
+				</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="adminTitle">
+                @Html.SmartLabelFor(model => model.ShippedDate)
+            </td>
+            <td class="adminData">
+				<div class="form-control-plaintext">
+					@if (Model.ShippedDate.HasValue)
+					{
+						@Model.ShippedDate.ToString()
+					}
+					else
+					{
+						<span class="text-muted">@T("Admin.Orders.Shipments.ShippedDate.NotYet")</span>
+					}
+					@if (Model.CanShip)
+					{
+						<button id="btn-setasshipped" type="button" class="btn btn-sm btn-secondary ml-2 align-text-top" data-url="@Url.Action("SetAsShipped", new { id = Model.Id })">
+							<i class="fa fa-check"></i>
+							<span>@T("Admin.Orders.Shipments.ShippedDate.Button")</span>
+						</button>
+					}
+				</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="adminTitle">
+                @Html.SmartLabelFor(model => model.DeliveryDate)
+            </td>
+            <td class="adminData">
+				<div class="form-control-plaintext">
+					@if (Model.DeliveryDate.HasValue)
+					{
+						@Model.DeliveryDate.Value.ToString()
+					}
+					else
+					{
+						<span class="text-muted">@T("Admin.Orders.Shipments.DeliveryDate.NotYet")</span>
+					}
+					@if (Model.CanDeliver)
+					{
+						<button id="btn-setasdelivered" type="button" class="btn btn-sm btn-secondary ml-2 align-text-top" data-url="@Url.Action("SetAsDelivered", new { id = Model.Id })">
+							<i class="fa fa-check"></i>
+							<span>@T("Admin.Orders.Shipments.DeliveryDate.Button")</span>
+						</button>
+					}
+				</div>
+            </td>
+        </tr>
+    </table>
+
+	<h5>@T("Admin.Orders.Shipments.Products")</h5>
+	
+	<div class="table-responsive">
+		<table class="table admin-table">
+			<thead>
+				<tr>
+					<th>
+						@T("Admin.Orders.Shipments.Products.ProductName")
+					</th>
+					<th>
+						@T("Admin.Orders.Shipments.Products.SKU")
+					</th>
+					<th class="text-center">
+						@T("Admin.Orders.Shipments.Products.QtyShipped")
+					</th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (var item in Model.Items)
+				{
+					<tr>
+						<td style="width: 70%;">
+							<div>
+								@Html.LabeledProductName(item.ProductId, item.ProductName, item.ProductTypeName, item.ProductTypeLabelHint)
+								@if (item.AttributeInfo.HasValue())
+								{
+									<br />
+									@Html.Raw(item.AttributeInfo)
+								}
+							</div>
+						</td>
+						<td style="width: 15%;">
+							<div>
+								@item.Sku
+							</div>
+						</td>
+						<td class="text-center" style="width: 15%;">
+							@item.QuantityInThisShipment
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}
+
+@Html.DeleteConfirmation("DeleteShipment", "shipment-delete")
+
+<script>
+    $(function () {
+
+        // Toggle open URL button.
+        $('#@Html.FieldIdFor(model => model.TrackingUrl)').change(function () {
+            var url = $(this).val() || '';
+            $('#btn-tracking-url').attr('href', url).toggleClass('disabled', _.isEmpty(url));
+        }).trigger('change');
+
+        // Set as shipped or delivered.
+		$('#btn-setasshipped, #btn-setasdelivered').on('click', function (e) {
+			e.preventDefault();
+			$(this).doPostData({ });
+			return false;
+		});
+	});
+</script>

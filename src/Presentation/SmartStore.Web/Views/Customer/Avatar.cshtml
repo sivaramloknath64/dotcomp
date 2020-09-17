@@ -1,0 +1,52 @@
+﻿@using SmartStore.Web.Models.Customer;
+@using SmartStore.Web.Framework.UI;
+@model CustomerAvatarEditModel
+@{
+	Layout = "_MyAccount";
+	ViewBag.PageClassToken = "avatar";
+	ViewBag.PageTitle = T("Account.Avatar").Text;
+
+	Html.AddTitleParts(T("PageTitle.Account").Text);
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+	@Html.ValidationSummary(true)
+}
+
+<div id="AvatarUploadContainer">
+	<div class="mb-2">
+        @{ Html.RenderPartial("Customer.Avatar", Model.Avatar); }
+	</div>
+
+	@(Html.SmartStore().FileUploader()
+		.Name("uploadedFile")
+		.UploadUrl(Url.Action("UploadAvatar", "Customer"))
+		.AcceptedFileTypes("gif|jpe?g|png|svg")
+		.ShowRemoveButton(Model.Avatar.PictureUrl.HasValue())
+		.ShowRemoveButtonAfterUpload(true)
+		.UploadText(T("Common.FileUploader.Upload"))
+		.OnUploadCompletedHandlerName("onAvatarUploaded")
+		.OnFileRemoveHandlerName("onAvatarRemoved")
+	)
+
+	@if (!Model.Avatar.PictureUrl.HasValue())
+	{
+		<div class="alert alert-info mt-2">@T("Account.Avatar.UploadRules", Model.MaxFileSize)</div>
+	}
+</div>
+
+<script>
+	window['onAvatarUploaded'] = function (e, el, data) {
+		var result = data.result;
+		if (result.success) {
+            window.location = '@Url.Action("Avatar", "Customer", new { area = "" })';
+		}
+	};
+
+    window['onAvatarRemoved'] = function (e, el) {
+		$(this).doPostData({
+			url: '@Url.Action("RemoveAvatar", "Customer", new { area = "" })'
+		});
+	}
+</script>

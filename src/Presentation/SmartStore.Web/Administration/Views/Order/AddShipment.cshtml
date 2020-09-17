@@ -1,0 +1,101 @@
+﻿@model ShipmentModel
+@{
+    ViewBag.Title = string.Format(T("Admin.Orders.Shipments.AddNew.Title").Text, Model.OrderId);
+}
+@using (Html.BeginForm())
+{
+    @Html.HiddenFor(model => model.Id)
+    @Html.HiddenFor(model => model.OrderId)
+
+    <div class="section-header">
+        <div class="title">
+            @string.Format(T("Admin.Orders.Shipments.AddNew.Title").Text, Model.OrderId) @Html.ActionLink("(" + T("Admin.Orders.Shipments.BackToOrder") + ")", "Edit", new { id = Model.OrderId })
+        </div>
+        <div class="options">
+            <button type="submit" name="save" value="save" class="btn btn-warning">
+				<i class="fa fa-check"></i>
+				<span>@T("Admin.Common.Save")</span>
+			</button>
+            <button type="submit" name="save" value="save-continue" class="btn btn-secondary">
+				<span>@T("Admin.Common.SaveContinue")</span>
+			</button>          
+        </div>
+    </div>
+
+    @Html.ValidationSummary(false)
+
+    <table class="adminContent mb-5">
+        <tr>
+            <td class="adminTitle">
+                @Html.SmartLabelFor(model => model.TrackingNumber)
+            </td>
+            <td class="adminData">
+                @Html.EditorFor(model => model.TrackingNumber)
+                @Html.ValidationMessageFor(model => model.TrackingNumber)
+            </td>
+        </tr>
+        <tr>
+            <td class="adminTitle">
+                @Html.SmartLabelFor(model => model.TrackingUrl)
+            </td>
+            <td class="adminData">
+				@Html.EditorFor(model => model.TrackingUrl)
+                @Html.ValidationMessageFor(model => model.TrackingUrl)
+            </td>
+        </tr>
+    </table>
+
+	<h5>@T("Admin.Orders.Shipments.Products")</h5>
+	
+	<div class="table-responsive">
+		<table class="table admin-table">
+			<thead>
+				<tr>
+					<th class="w-50">
+						@T("Admin.Orders.Shipments.Products.ProductName")
+					</th>
+					<th>
+						@T("Admin.Orders.Shipments.Products.SKU")
+					</th>
+					<th class="text-center">
+						@T("Admin.Orders.Shipments.Products.QtyOrdered")
+					</th>
+					<th class="text-center">
+						@T("Admin.Orders.Shipments.Products.QtyShipped")
+					</th>
+					<th style="width: 180px;">
+						@T("Admin.Orders.Shipments.Products.QtyToShip")
+					</th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (var item in Model.Items)
+				{
+                    var fieldId = string.Concat("qtyToAdd", item.OrderItemId);
+					<tr>
+						<td>
+							@Html.LabeledProductName(item.ProductId, item.ProductName, item.ProductTypeName, item.ProductTypeLabelHint)
+							@if (!String.IsNullOrEmpty(item.AttributeInfo))
+							{
+								<br />
+								@Html.Raw(item.AttributeInfo)
+							}
+						</td>
+						<td>
+							@item.Sku
+						</td>
+						<td class="text-center">
+							@item.QuantityOrdered
+						</td>
+						<td class="text-center">
+							@item.QuantityInAllShipments
+						</td>
+						<td>
+                            @Html.Editor(fieldId, "Int32", fieldId, new { size = "sm", htmlAttributes = new { value = item.QuantityToAdd } })
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+}

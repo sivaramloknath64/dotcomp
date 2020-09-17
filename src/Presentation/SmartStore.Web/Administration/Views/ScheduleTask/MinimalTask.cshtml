@@ -1,0 +1,66 @@
+﻿@model ScheduleTaskModel
+@{
+    Layout = null;
+    var widgetId = "minimal-task-widget-" + Model.Id;
+    var returnUrl = (string)ViewBag.ReturnUrl;
+    var canExecute = ViewBag.CanExecute == true;
+    var cancellable = ViewBag.Cancellable == true;
+    var reloadPage = ViewBag.ReloadPage == true;
+    var isRunning = Model.LastHistoryEntry.IsRunning;
+}
+<div id="@widgetId" class="minimal-task-widget form-row">
+	<div class="task-info col@(isRunning ? " hide" : "")">
+		@{ Html.RenderPartial("_MinimalTaskWidget", Model); }
+	</div>
+	<div class='task-progress text-muted col@(isRunning ? "" : " hide")' data-task-id='@Model.Id' data-running='@(isRunning ? "true" : "false")'></div>
+	@if (cancellable && canExecute)
+    {
+		<div class="col-auto">
+			<a href='@Model.CancelUrl' data-task-id='@Model.Id' class='btn btn-sm btn-danger btn-cancel-task@(!isRunning ? " hide" : "")' onclick='return confirm(@T("Admin.Common.AreYouSure").JsText);'>
+				@T("Common.Cancel")
+			</a>
+		</div>
+	}
+</div>
+
+<script>
+	$(function () {
+		SmartStore.Admin.TaskWatcher.startWatching({
+			context: $('#@widgetId'),
+			elementsSelector: '.task-progress',
+			defaultProgressMessage: @T("Admin.System.ScheduleTasks.RunNow.IsRunning").JsText,
+			pollUrl: '@Url.Action("GetRunningTasks")',
+			onTaskStarted: function (task, el) {
+				el.prev().addClass('hide'); // .task-info
+				el.next().removeClass('hide'); // .btn-cancel-task
+			},
+			onTaskCompleted: function (taskId, el) {
+				el.prev().removeClass('hide'); // .task-info
+				el.next().addClass('hide'); // .btn-cancel-task
+
+				@if (reloadPage)
+				{
+					<text>location.href = '@returnUrl';</text>
+				}
+				else
+				{
+					<text>$.ajax({
+						cache: false,
+						global: false,
+						type: 'POST',
+						url: '@Url.Action("GetMinimalTaskWidget")',
+						data: { taskId: taskId, returnUrl: '@returnUrl' },
+						success: function (data) {
+							el.prev().html(data);
+						}
+					});</text>
+				}
+
+			}
+		});
+	});
+</script>
+
+
+
+

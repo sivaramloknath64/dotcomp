@@ -1,0 +1,114 @@
+﻿@model BlogPostModel
+@using SmartStore.Web.Models.Blogs;
+@{
+    Layout = "_Layout";
+
+    Html.AddTitleParts(Model.MetaTitle.HasValue() ? Model.MetaTitle : Model.Title);
+    Html.AddMetaDescriptionParts(Model.MetaDescription);
+    Html.AddMetaKeywordParts(Model.MetaKeywords);
+}
+
+@section right {
+    @{
+        Html.RenderAction("BlogMonths", "Blog");
+        Html.RenderAction("BlogTags", "Blog");
+    }
+}
+
+<article class="page blogpost-page" itemscope itemtype="http://schema.org/BlogPosting">  
+
+    @if (Model.DisplayAdminLink)
+	{
+		<a class="btn btn-secondary btn-flat btn-admin-edit" href="@Url.Action("Edit", "Blog", new { id = Model.Id, area = "admin" })" target="admin-blogpost" rel="nofollow">
+			<i class="fa fa-cog"></i>
+			<span>@T("Common.Cms.EditBlogpost")</span>
+		</a>
+	}
+
+    @if (Model.PictureModel.FullSizeImageUrl.HasValue())
+    {
+        var pic = Model.PictureModel;
+        <div class="shadow-sm-primary mb-3">
+            <figure class="single-media-item-image">
+                <img class="img-fluid" src="@pic.FullSizeImageUrl" alt="@pic.AlternateText" title="@pic.Title" width="@pic.FullSizeImageWidth.Value" height="@pic.FullSizeImageHeight.Value" itemprop="image" />
+            </figure>
+        </div>
+    }
+
+    <div class="blogpost-date text-muted" itemprop="dateCreated">
+        @Model.CreatedOn.ToNativeString("D")
+    </div>
+
+    <div class="page-title mb-4 mt-3">
+		<h1 class="fs-h2" itemprop="headline">@Model.Title</h1>
+    </div>
+
+    <div class="blogpost-body">
+		
+        @{ Html.RenderWidget("blogpost_page_before_body"); }
+
+        <div class="blogpost-content long-text html-editor-content" itemprop="articleBody">
+            @Html.Raw(Model.Body)
+        </div>
+
+        @if (Model.Tags.Count > 0)
+        {
+            <div class="blogpost-tags mt-4" itemprop="keywords">
+                @for (int i = 0, length = Model.Tags.Count; i < length; i++)
+                {
+                    var tag = Model.Tags[i];
+                    <a class="blogpost-tag badge badge-pill badge-info py-2 px-3 mb-1" href="@Url.RouteUrl("BlogByTag", new { tag = tag.SeName })">@tag.Name</a>
+                }
+            </div>
+        }
+
+		@{ Html.RenderWidget("blogpost_page_before_comments"); }
+
+		@if (Model.Comments.AllowComments)
+		{
+			<div class="row">
+				<div class="col-12">
+					<div class="block blog-comment-form mt-5">
+						@using (Html.BeginForm())
+						{
+							<fieldset class="blog-comment-form content-group mt-5">
+								<legend><span>@T("Blog.Comments.LeaveYourComment")</span></legend>
+
+								@if (ViewContext.ViewData.ModelState.ContainsKey(""))
+								{
+									@Html.ValidationSummary(true)
+								}
+
+								<div class="form-group">
+									@Html.TextAreaFor(model => model.AddNewComment.CommentText, new { @class = "form-control form-control-lg", placeholder = Html.DisplayNameFor(m => m.AddNewComment.CommentText), rows = "6" })
+									@Html.ValidationMessageFor(model => model.AddNewComment.CommentText)
+								</div>
+
+								@{ Html.RenderWidget("gdpr_consent"); }
+
+								@if (Model.AddNewComment.DisplayCaptcha)
+								{
+									<div class="form-group">
+										<div class="captcha-box">
+											@Html.Raw(Html.GenerateCaptcha())
+										</div>
+									</div>
+								}
+
+								<div class="form-group">
+									<button type="submit" name="add-comment" value="add-comment" class="btn btn-primary btn-lg">
+										@T("Blog.Comments.SubmitButton")
+									</button>
+								</div>
+							</fieldset>
+						}
+					</div>
+
+					@{ Html.RenderPartial("Comment.List", Model.Comments); }
+				</div>
+			</div>
+		}
+
+		@{ Html.RenderWidget("blogpost_page_after_comments"); }
+    </div>
+</article>

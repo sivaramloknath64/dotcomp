@@ -1,0 +1,104 @@
+﻿@model NewsItemModel
+
+@using SmartStore.Web.Models.News;
+
+@{
+    Layout = "_Layout";
+
+    Html.AddTitleParts(!String.IsNullOrEmpty(Model.MetaTitle) ? Model.MetaTitle : Model.Title);
+    Html.AddMetaDescriptionParts(Model.MetaDescription);
+    Html.AddMetaKeywordParts(Model.MetaKeywords);
+}
+
+<article class="page news-item-page" itemscope itemtype="http://schema.org/NewsArticle">
+
+    @if (Model.DisplayAdminLink)
+	{
+		<a class="btn btn-secondary btn-flat btn-admin-edit" href="@Url.Action("Edit", "News", new { id = Model.Id, area = "admin" })" target="admin-newsitem" rel="nofollow">
+			<i class="fa fa-cog"></i>
+			<span>@T("Common.Cms.EditNewsItem")</span>
+		</a>
+	}
+
+    @if (Model.PictureModel.FullSizeImageUrl.HasValue())
+    {
+        var pic = Model.PictureModel;
+        <div class="shadow-sm shadow-primary mb-3">
+            <figure class="single-media-item-image">
+                <img class="img-fluid" src="@pic.FullSizeImageUrl" alt="@pic.AlternateText" title="@pic.Title" width="@pic.FullSizeImageWidth.Value" height="@pic.FullSizeImageHeight.Value" itemprop="image" />
+            </figure>
+        </div>
+    }
+
+    <div class="news-date text-muted mb-2" itemprop="datePublished">
+        @Model.CreatedOn.ToNativeString("D")
+    </div>
+
+    <meta itemprop="dateModified" content="@Model.CreatedOn.ToNativeString("D")">
+
+    <div class="page-title mb-4">
+        <h1 class="fs-h2" itemprop="headline">@Model.Title</h1>
+    </div>
+
+    <div class="news-body">    
+        @{ Html.RenderWidget("newsitem_page_before_body"); }
+
+        <div class="news-content long-text html-editor-content" itemprop="articleBody">
+            @Html.Raw(Model.Full)
+        </div>
+
+        @{ Html.RenderWidget("newsitem_page_before_comments"); }
+
+        @if (Model.Comments.AllowComments)
+        {
+			<div class="row">
+				<div class="col-12">
+					<div class="block news-comment-form mt-5">
+						@using (Html.BeginForm())
+						{
+							<fieldset class="news-comment-form content-group mt-5">
+								<legend><span>@T("News.Comments.LeaveYourComment")</span></legend>
+								
+								@if (ViewContext.ViewData.ModelState.ContainsKey(""))
+								{
+									@Html.ValidationSummary(true)
+								}
+
+								<div class="form-group">
+									@Html.TextBoxFor(model => model.AddNewComment.CommentTitle, new { @class = "form-control form-control-lg", placeholder = Html.DisplayNameFor(m => m.AddNewComment.CommentTitle) })
+									@Html.ValidationMessageFor(model => model.AddNewComment.CommentTitle)
+								</div>
+
+								<div class="form-group">
+									@Html.TextAreaFor(model => model.AddNewComment.CommentText, new { @class = "form-control form-control-lg", placeholder = Html.DisplayNameFor(m => m.AddNewComment.CommentText), rows = "6" })
+									@Html.ValidationMessageFor(model => model.AddNewComment.CommentText)
+								</div>
+
+								@{ Html.RenderWidget("gdpr_consent"); }
+
+								@if (Model.AddNewComment.DisplayCaptcha)
+								{
+									<div class="form-group">
+										<div class="captcha-box">
+											@Html.Raw(Html.GenerateCaptcha())
+										</div>
+									</div>
+								}
+
+								<div class="form-group">
+									<button type="submit" name="add-comment" value="add-comment" class="btn btn-primary btn-lg">
+										@T("News.Comments.SubmitButton")
+									</button>
+								</div>
+							</fieldset>
+						}
+					</div>
+
+					@{ Html.RenderPartial("Comment.List", Model.Comments); }
+				</div>
+			</div>
+        }
+
+        @{ Html.RenderWidget("newsitem_page_after_comments"); }
+    </div>
+</article>

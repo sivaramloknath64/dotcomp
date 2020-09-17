@@ -1,0 +1,30 @@
+﻿@model ScheduleTaskModel
+@{
+	Layout = null;
+}
+
+@if (!Model.LastHistoryEntry.IsRunning && !Model.LastHistoryEntry.FinishedOn.HasValue)
+{
+	<div class="muted">@T("Common.Never")</div>
+}
+else if (Model.LastHistoryEntry.Id != 0)
+{
+	<div>@Model.LastHistoryEntry.StartedOn.ToString("g")</div>
+	<div class="muted">@Model.LastHistoryEntry.FinishedOnPretty</div>
+	if (Model.LastHistoryEntry.Duration.HasValue())
+	{
+		<div><span>@T("Common.Duration"): </span> <span class="muted">@Model.LastHistoryEntry.Duration</span></div>
+	}
+	if (Model.LastHistoryEntry.Error.HasValue())
+	{
+		<div class="text-danger mt-2"><strong class="font-weight-medium">@T("Common.Error"): </strong> <span>@Model.LastHistoryEntry.Error.Truncate(100, "...")</span></div>
+		if (Model.LastHistoryEntry.SucceededOn.HasValue && Model.LastHistoryEntry.SucceededOn != Model.LastHistoryEntry.FinishedOn)
+		{
+			<div><span>@T("Admin.System.ScheduleTasks.LastSuccess"): </span> <span class="muted">@Model.LastHistoryEntry.SucceededOn.Value.ToString("g")</span></div>
+		}
+	}
+}
+
+
+
+
